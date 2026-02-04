@@ -23,10 +23,21 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './public/index.html'
+            template: './public/index.html',
+            filename: 'index.html'
         }),
         new CopyWebpackPlugin({
             patterns: [
+                // 새로운 HTML 페이지 복사
+                {
+                    from: 'public/upload.html',
+                    to: 'upload.html'
+                },
+                {
+                    from: 'public/ar.html',
+                    to: 'ar.html'
+                },
+                // WASM 파일
                 {
                     from: 'public/wasm/ar-engine.js',
                     to: 'wasm/ar-engine.js',

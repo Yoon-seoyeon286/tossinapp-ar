@@ -1,240 +1,129 @@
 /**
  * ImageProcessor.js
  *
- * MediaPipe Selfie Segmentation을 이용한 배경 제거 모듈
- * 이미지 업로드 → 배경 분리 → 초록색 크로마키 배경 적용 → AR 표시
+ * @imgly/background-removal을 이용한 고품질 배경 제거 모듈
+ * 이미지 업로드 → 배경 제거 → 투명 PNG 생성
  */
 
-import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
+import { removeBackground } from '@imgly/background-removal';
 
 export class ImageProcessor {
     constructor() {
-        this.selfieSegmentation = null;
         this.isReady = false;
-
-        // 처리용 캔버스
-        this.canvas = null;
-        this.ctx = null;
-
-        // 크로마키 색상 (초록색)
-        this.chromaKeyColor = { r: 0, g: 255, b: 0 };
-
-        // 콜백
-        this.onResultCallback = null;
+        this.config = {
+            debug: false,
+            model: 'medium',  // 'small' | 'medium' | 'large'
+            output: {
+                format: 'image/png',
+                quality: 0.9,
+            }
+        };
     }
 
     /**
-     * MediaPipe 초기화
+     * 초기화 (모델 프리로드)
      */
     async init() {
-        console.log('[ImageProcessor] MediaPipe 초기화 중...');
+        console.log('[ImageProcessor] 배경 제거 엔진 초기화 중...');
 
-        this.selfieSegmentation = new SelfieSegmentation({
-            locateFile: (file) => {
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
-            }
-        });
-
-        // 모델 설정
-        this.selfieSegmentation.setOptions({
-            modelSelection: 1,  // 0: general, 1: landscape (더 정확)
-            selfieMode: false,
-        });
-
-        // 결과 콜백 설정
-        this.selfieSegmentation.onResults((results) => this.onResults(results));
-
-        // 캔버스 생성
-        this.canvas = document.createElement('canvas');
-        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-
+        // 첫 실행 시 모델이 다운로드됨 (캐시됨)
         this.isReady = true;
-        console.log('[ImageProcessor] MediaPipe 초기화 완료!');
+        console.log('[ImageProcessor] 초기화 완료!');
     }
 
     /**
-     * MediaPipe 결과 처리
-     */
-    onResults(results) {
-        if (!results.segmentationMask) {
-            console.warn('[ImageProcessor] 세그멘테이션 마스크 없음');
-            return;
-        }
-
-        const width = results.image.width;
-        const height = results.image.height;
-
-        // 캔버스 크기 설정
-        this.canvas.width = width;
-        this.canvas.height = height;
-
-        // 원본 이미지 그리기
-        this.ctx.drawImage(results.image, 0, 0, width, height);
-
-        // 이미지 데이터 가져오기
-        const imageData = this.ctx.getImageData(0, 0, width, height);
-        const pixels = imageData.data;
-
-        // 마스크 데이터 가져오기
-        const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = width;
-        maskCanvas.height = height;
-        const maskCtx = maskCanvas.getContext('2d');
-        maskCtx.drawImage(results.segmentationMask, 0, 0, width, height);
-        const maskData = maskCtx.getImageData(0, 0, width, height).data;
-
-        // 배경을 크로마키 색상으로 대체
-        for (let i = 0; i < pixels.length; i += 4) {
-            const maskValue = maskData[i];  // 마스크 값 (0-255)
-
-            // 마스크 값이 낮으면 배경 (사람이 아님)
-            if (maskValue < 128) {
-                // 배경 → 초록색으로 대체
-                pixels[i] = this.chromaKeyColor.r;      // R
-                pixels[i + 1] = this.chromaKeyColor.g;  // G
-                pixels[i + 2] = this.chromaKeyColor.b;  // B
-                pixels[i + 3] = 255;                     // A
-            }
-            // else: 전경 (사람) → 원본 유지
-        }
-
-        // 결과 적용
-        this.ctx.putImageData(imageData, 0, 0);
-
-        // 콜백 호출
-        if (this.onResultCallback) {
-            this.onResultCallback(this.canvas);
-        }
-    }
-
-    /**
-     * 이미지 파일 처리
+     * 이미지 파일에서 배경 제거
      * @param {File} file - 이미지 파일
-     * @returns {Promise<HTMLCanvasElement>} - 처리된 캔버스
+     * @param {Function} onProgress - 진행률 콜백 (0-100)
+     * @returns {Promise<Blob>} - 투명 배경 PNG Blob
      */
-    async processFile(file) {
+    async processFile(file, onProgress = null) {
+        if (!this.isReady) {
+            throw new Error('ImageProcessor가 초기화되지 않음');
+        }
+
+        console.log('[ImageProcessor] 배경 제거 시작:', file.name);
+
+        try {
+            const blob = await removeBackground(file, {
+                debug: this.config.debug,
+                model: this.config.model,
+                progress: (key, current, total) => {
+                    const percent = Math.round((current / total) * 100);
+                    if (onProgress) onProgress(percent);
+                    console.log(`[ImageProcessor] ${key}: ${percent}%`);
+                },
+                output: this.config.output,
+            });
+
+            console.log('[ImageProcessor] 배경 제거 완료!');
+            return blob;
+
+        } catch (error) {
+            console.error('[ImageProcessor] 배경 제거 실패:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Blob을 Canvas로 변환
+     * @param {Blob} blob - 이미지 Blob
+     * @returns {Promise<HTMLCanvasElement>}
+     */
+    async blobToCanvas(blob) {
         return new Promise((resolve, reject) => {
-            if (!this.isReady) {
-                reject(new Error('ImageProcessor가 초기화되지 않음'));
-                return;
-            }
-
             const img = new Image();
-            img.onload = async () => {
-                this.onResultCallback = (resultCanvas) => {
-                    resolve(resultCanvas);
-                };
-
-                try {
-                    await this.selfieSegmentation.send({ image: img });
-                } catch (error) {
-                    reject(error);
-                }
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(img.src);
+                resolve(canvas);
             };
-
-            img.onerror = () => reject(new Error('이미지 로드 실패'));
-            img.src = URL.createObjectURL(file);
+            img.onerror = reject;
+            img.src = URL.createObjectURL(blob);
         });
     }
 
     /**
-     * 이미지 URL 처리
-     * @param {string} url - 이미지 URL
-     * @returns {Promise<HTMLCanvasElement>} - 처리된 캔버스
+     * 이미지 파일 처리 후 Canvas 반환
+     * @param {File} file - 이미지 파일
+     * @param {Function} onProgress - 진행률 콜백
+     * @returns {Promise<HTMLCanvasElement>}
      */
-    async processURL(url) {
+    async processFileToCanvas(file, onProgress = null) {
+        const blob = await this.processFile(file, onProgress);
+        return await this.blobToCanvas(blob);
+    }
+
+    /**
+     * Blob을 Data URL로 변환
+     * @param {Blob} blob
+     * @returns {Promise<string>}
+     */
+    blobToDataURL(blob) {
         return new Promise((resolve, reject) => {
-            if (!this.isReady) {
-                reject(new Error('ImageProcessor가 초기화되지 않음'));
-                return;
-            }
-
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-
-            img.onload = async () => {
-                this.onResultCallback = (resultCanvas) => {
-                    resolve(resultCanvas);
-                };
-
-                try {
-                    await this.selfieSegmentation.send({ image: img });
-                } catch (error) {
-                    reject(error);
-                }
-            };
-
-            img.onerror = () => reject(new Error('이미지 로드 실패'));
-            img.src = url;
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
         });
     }
 
     /**
-     * HTMLImageElement 직접 처리
-     * @param {HTMLImageElement} img - 이미지 엘리먼트
-     * @returns {Promise<HTMLCanvasElement>} - 처리된 캔버스
+     * 모델 품질 설정
+     * @param {'small' | 'medium' | 'large'} model
      */
-    async processImage(img) {
-        return new Promise(async (resolve, reject) => {
-            if (!this.isReady) {
-                reject(new Error('ImageProcessor가 초기화되지 않음'));
-                return;
-            }
-
-            this.onResultCallback = (resultCanvas) => {
-                resolve(resultCanvas);
-            };
-
-            try {
-                await this.selfieSegmentation.send({ image: img });
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    /**
-     * 처리된 캔버스를 Blob으로 변환
-     * @param {HTMLCanvasElement} canvas
-     * @param {string} type - MIME 타입 (default: 'image/png')
-     * @returns {Promise<Blob>}
-     */
-    canvasToBlob(canvas, type = 'image/png') {
-        return new Promise((resolve) => {
-            canvas.toBlob(resolve, type);
-        });
-    }
-
-    /**
-     * 처리된 캔버스를 Data URL로 변환
-     * @param {HTMLCanvasElement} canvas
-     * @param {string} type - MIME 타입 (default: 'image/png')
-     * @returns {string}
-     */
-    canvasToDataURL(canvas, type = 'image/png') {
-        return canvas.toDataURL(type);
-    }
-
-    /**
-     * 크로마키 색상 설정
-     * @param {number} r - Red (0-255)
-     * @param {number} g - Green (0-255)
-     * @param {number} b - Blue (0-255)
-     */
-    setChromaKeyColor(r, g, b) {
-        this.chromaKeyColor = { r, g, b };
+    setModel(model) {
+        this.config.model = model;
     }
 
     /**
      * 정리
      */
     destroy() {
-        if (this.selfieSegmentation) {
-            this.selfieSegmentation.close();
-            this.selfieSegmentation = null;
-        }
-        this.canvas = null;
-        this.ctx = null;
         this.isReady = false;
         console.log('[ImageProcessor] 정리 완료');
     }
