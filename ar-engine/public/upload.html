@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>이미지 업로드 - AR Vision</title>
+    <title>가상내짤</title>
     <style>
         * {
             margin: 0;
@@ -229,10 +229,16 @@
             gap: 10px;
             box-shadow: 0 4px 30px rgba(0, 255, 136, 0.5);
             transition: all 0.3s ease;
+            position: relative;
+            z-index: 100;
         }
 
         .ar-button.visible {
             display: flex;
+        }
+
+        .ar-button:active {
+            transform: scale(0.98);
         }
 
         .ar-button:hover {
@@ -304,7 +310,7 @@
 
 <body>
     <div class="container">
-        <h1>AR Vision</h1>
+        <h1>가상내짤</h1>
         <p class="subtitle">이미지에서 배경을 자동으로 제거하고<br>AR로 표시합니다</p>
 
         <!-- 업로드 영역 -->
@@ -543,17 +549,52 @@
             });
         }
 
-        // AR로 이동
-        arButton.addEventListener('click', async () => {
-            if (!processedImageBlob) return;
+        // AR로 이동 함수
+        async function goToAR() {
+            console.log('[Upload] AR 버튼 클릭됨');
 
-            // 처리된 이미지를 sessionStorage에 저장 (Base64)
-            const dataURL = await blobToDataURL(processedImageBlob);
-            sessionStorage.setItem('arImage', dataURL);
+            if (!processedImageBlob) {
+                console.log('[Upload] processedImageBlob이 없음');
+                return;
+            }
 
-            // AR 페이지로 이동
-            window.location.href = 'ar.html';
+            try {
+                arButton.textContent = '로딩 중...';
+                arButton.style.pointerEvents = 'none';
+
+                // 처리된 이미지를 sessionStorage에 저장 (Base64)
+                const dataURL = await blobToDataURL(processedImageBlob);
+                sessionStorage.setItem('arImage', dataURL);
+
+                console.log('[Upload] 이미지 저장 완료, AR 페이지로 이동');
+
+                // AR 페이지로 이동
+                window.location.href = 'ar.html';
+            } catch (err) {
+                console.error('[Upload] AR 이동 실패:', err);
+                arButton.innerHTML = `
+                    <svg viewBox="0 0 24 24">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    AR로 보기
+                `;
+                arButton.style.pointerEvents = 'auto';
+            }
+        }
+
+        // 클릭 이벤트
+        arButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            goToAR();
         });
+
+        // 터치 이벤트 (모바일)
+        arButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            goToAR();
+        }, { passive: false });
 
         // 에러 표시
         function showError(message) {
