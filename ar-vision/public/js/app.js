@@ -344,49 +344,49 @@
         if (!capturedScreenshot) return;
         console.log('[App] AR 스크린샷 워터마크 합성 시작');
 
+        const ctx = capturedScreenshot.getContext('2d');
+        const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.25;
+        const margin = 30;
+        const logoX = capturedScreenshot.width - logoSize - margin;
+        const logoY = capturedScreenshot.height - logoSize - margin;
+
+        // [DEBUG] 공격적인 그리기 테스트 [App v3]
+        ctx.save();
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 20;
+        ctx.strokeRect(0, 0, capturedScreenshot.width, capturedScreenshot.height);
+        ctx.beginPath();
+        ctx.moveTo(0, 0); ctx.lineTo(capturedScreenshot.width, capturedScreenshot.height);
+        ctx.moveTo(capturedScreenshot.width, 0); ctx.lineTo(0, capturedScreenshot.height);
+        ctx.stroke();
+        ctx.restore();
+
+        console.log('[App v3] 워터마크 위치:', { logoX, logoY, logoSize, canvasW: capturedScreenshot.width, canvasH: capturedScreenshot.height });
+
         const logo = new Image();
         logo.onload = () => {
-            console.log('[App] 워터마크 로드 완료, 그리기 시작');
-            const ctx = capturedScreenshot.getContext('2d');
-            const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.25; // 25% 로 확대
-            const margin = 30;
-            const logoX = capturedScreenshot.width - logoSize - margin;
-            const logoY = capturedScreenshot.height - logoSize - margin;
-
-            // 디버그용: 빨간색 테두리 그리기 (나중에 제거)
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 5;
-            ctx.strokeRect(logoX, logoY, logoSize, logoSize);
-
-            // 로고 그리기
-            ctx.globalAlpha = 1.0; // 완전 불투명하게 테스트
-            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            console.log('[App] 워터마크 이미지 로드 성공, 그리기');
             ctx.globalAlpha = 1.0;
+            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            saveBlob();
+        };
 
+        logo.onerror = () => {
+            console.error('[App] el-logo.png 로드 실패');
+            saveBlob();
+        };
+
+        function saveBlob() {
             capturedScreenshot.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'ar-capture-' + Date.now() + '.png';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                console.log('[App] 다운로드 실행 완료 (Blob: ' + blob.size + ')');
-            }, 'image/png');
-        };
-
-        logo.onerror = () => {
-            console.error('[App] el-logo.png 로딩 실패! 원본만 저장합니다.');
-            capturedScreenshot.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ar-capture-fallback-' + Date.now() + '.png';
                 a.click();
                 URL.revokeObjectURL(url);
+                console.log('[App] 저장 완료');
             }, 'image/png');
-        };
+        }
 
         logo.src = 'el-logo.png';
     }

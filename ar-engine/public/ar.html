@@ -488,7 +488,9 @@
             </svg>
         </button>
         <button class="btn-capture" id="btn-capture" title="캡처">
-            <div class="inner-circle"></div>
+            <div class="inner-circle"
+                style="display:flex; align-items:center; justify-content:center; font-size:10px; color:#fff; font-weight:bold;">
+                V 3</div>
         </button>
         <button class="btn-side" id="btn-download" title="다운로드">
             <svg viewBox="0 0 24 24">
@@ -937,38 +939,43 @@
                 const isMirrored = currentFacing === 'user';
                 drawVideoCover(ctx, video, canvas.width, canvas.height, isMirrored);
 
+                // [DEBUG] 즉시 그리기 테스트
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(50, 50, 100, 100);
+                console.log('[AR v3] Debug blue box drawn');
+
                 // AR 오버레이 합성
                 ctx.drawImage(arCanvas, 0, 0);
 
                 // 워터마크 적용 시도
                 let finalCanvas = canvas;
                 try {
-                    console.log('[AR] 워터마크 적용 시도 중 (el-logo.png)...');
+                    console.log('[AR v3] 워터마크 적용 시도 중 (el-logo.png)...');
                     try {
                         finalCanvas = await Watermark.apply(canvas, 'el-logo.png', {
                             opacity: 0.8,
                             sizeRatio: 0.2,
                             margin: 25
                         });
-                        console.log('[AR] el-logo.png 적용 성공');
+                        console.log('[AR v3] el-logo.png 적용 성공');
                     } catch (e) {
-                        console.warn('[AR] el-logo.png 실패, logo.png로 재시도...');
+                        console.warn('[AR v3] el-logo.png 실패, logo.png로 재시도...');
                         finalCanvas = await Watermark.apply(canvas, 'logo.png', {
                             opacity: 0.8,
                             sizeRatio: 0.2,
                             margin: 25
                         });
-                        console.log('[AR] logo.png 적용 성공');
+                        console.log('[AR v3] logo.png 적용 성공');
                     }
                 } catch (wmErr) {
-                    console.warn('[AR] 모든 워터마크 적용 실패, 원본 유지:', wmErr);
+                    console.warn('[AR v3] 모든 워터마크 적용 실패, 원본 유지:', wmErr);
                 }
 
                 // 최후의 데이터를 Blob으로 변환
                 finalCanvas.toBlob((blob) => {
                     if (blob) {
                         lastCapturedBlob = blob;
-                        console.log('[AR] Blob 생성 완료:', blob.size, 'bytes');
+                        console.log('[AR v3] Blob 생성 완료:', blob.size, 'bytes');
 
                         // 다운로드 버튼 활성화
                         const downloadBtn = document.getElementById('btn-download');
@@ -977,13 +984,13 @@
 
                         showToast('캡처 성공! 저장 버튼(우측)을 누르세요.');
                     } else {
-                        console.error('[AR] Blob 생성 실패');
+                        console.error('[AR v3] Blob 생성 실패');
                         showToast('캡처 실패 (Canvas 오류)');
                     }
                 }, 'image/png');
 
             } catch (err) {
-                console.error('[AR] 캡처 중 치명적 오류:', err);
+                console.error('[AR v3] 캡처 중 치명적 오류:', err);
                 alert('캡처 중 오류가 발생했습니다: ' + err.message);
             }
         }
