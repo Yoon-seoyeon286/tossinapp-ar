@@ -344,38 +344,33 @@
         if (!capturedScreenshot) return;
 
         const ctx = capturedScreenshot.getContext('2d');
-        const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.20;
+        const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.15;
         const margin = 20;
         const logoX = capturedScreenshot.width - logoSize - margin;
         const logoY = capturedScreenshot.height - logoSize - margin;
 
-        const logo = new Image();
-        logo.onload = () => {
+        // DOM에서 이미 로드된 워터마크 이미지 사용
+        const logo = document.querySelector('.rt-watermark');
+
+        if (logo && logo.complete && logo.naturalWidth > 0) {
             ctx.save();
-            ctx.globalAlpha = 0.8;
+            ctx.globalAlpha = 0.6;
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
             ctx.restore();
-            saveBlob();
-        };
-
-        logo.onerror = () => {
-            console.error('[App] el-logo.png 로드 실패');
-            saveBlob();
-        };
-
-        function saveBlob() {
-            capturedScreenshot.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ar-capture-' + Date.now() + '.png';
-                a.click();
-                URL.revokeObjectURL(url);
-                console.log('[App] 저장 완료');
-            }, 'image/png');
+            console.log('[App] 워터마크 그리기 완료');
+        } else {
+            console.warn('[App] 워터마크 이미지가 준비되지 않음');
         }
 
-        logo.src = 'el-logo.png';
+        capturedScreenshot.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ar-capture-' + Date.now() + '.png';
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log('[App] 저장 완료');
+        }, 'image/png');
     }
 
     function downloadChromaImage() {
@@ -387,38 +382,32 @@
         const ctx = tempCanvas.getContext('2d');
         ctx.drawImage(results.chroma, 0, 0);
 
-        const logo = new Image();
-        logo.onload = () => {
-            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.25;
-            const margin = 30;
-            const logoX = tempCanvas.width - logoSize - margin;
-            const logoY = tempCanvas.height - logoSize - margin;
+        // DOM에서 이미 로드된 워터마크 이미지 사용
+        const logo = document.querySelector('.rt-watermark');
+        const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.15;
+        const margin = 20;
+        const logoX = tempCanvas.width - logoSize - margin;
+        const logoY = tempCanvas.height - logoSize - margin;
 
-            ctx.globalAlpha = 0.9;
+        if (logo && logo.complete && logo.naturalWidth > 0) {
+            ctx.save();
+            ctx.globalAlpha = 0.6;
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            ctx.restore();
+            console.log('[App] 워터마크 그리기 완료');
+        } else {
+            console.warn('[App] 워터마크 이미지가 준비되지 않음');
+        }
 
-            tempCanvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'chroma-' + Date.now() + '.png';
-                a.click();
-                URL.revokeObjectURL(url);
-            }, 'image/png');
-        };
-
-        logo.onerror = () => {
-            results.chroma.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'chroma-fallback-' + Date.now() + '.png';
-                a.click();
-                URL.revokeObjectURL(url);
-            }, 'image/png');
-        };
-
-        logo.src = 'el-logo.png';
+        tempCanvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chroma-' + Date.now() + '.png';
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log('[App] 저장 완료');
+        }, 'image/png');
     }
 
     // ========== 리셋 ==========
