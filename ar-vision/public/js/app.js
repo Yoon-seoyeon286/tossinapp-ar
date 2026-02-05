@@ -46,6 +46,7 @@
     const $arContainer = document.getElementById('ar-container');
     const $cameraVideo = document.getElementById('camera-video');
     const $arCanvas = document.getElementById('ar-canvas');
+    const $arControls = document.getElementById('ar-controls');
 
     // ========== 초기화 ==========
     function init() {
@@ -70,6 +71,13 @@
         $tabBtns.forEach(btn => {
             btn.addEventListener('click', () => switchTab(btn.dataset.tab));
         });
+
+        // AR 안내창 클릭 시 닫기
+        if ($arControls) {
+            $arControls.addEventListener('click', () => {
+                $arControls.style.display = 'none';
+            });
+        }
 
         console.log('[App] 초기화 완료');
     }
@@ -279,42 +287,67 @@
     function downloadChromaImage() {
         if (!results.chroma) return;
 
+        console.log('[App] 다운로드 시작 - 워터마크 적용');
+
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = results.chroma.width;
         tempCanvas.height = results.chroma.height;
-        const ctx = tempCanvas.getContext('2d');
+        const ctx = tempCanvas.getContext('2d', { willReadFrequently: true });
 
         ctx.drawImage(results.chroma, 0, 0);
 
         const logo = new Image();
-        logo.crossOrigin = 'anonymous';
         
         logo.onload = () => {
-            console.log('[App] 로고 로드 성공');
+            console.log('[App] 로고 로드 성공, 워터마크 추가 중...');
             
             const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.1;
             const margin = 15;
             const logoX = tempCanvas.width - logoSize - margin;
             const logoY = tempCanvas.height - logoSize - margin;
 
-            ctx.save();
-            ctx.filter = 'grayscale(100%)';
-            ctx.globalAlpha = 0.45;
-            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
-            ctx.restore();
+            console.log('[App] 로고 위치:', { logoX, logoY, logoSize });
+
+            const logoCanvas = document.createElement('canvas');
+            logoCanvas.width = logoSize;
+            logoCanvas.height = logoSize;
+            const logoCtx = logoCanvas.getContext('2d');
+            
+            logoCtx.drawImage(logo, 0, 0, logoSize, logoSize);
+            
+            const imageData = logoCtx.getImageData(0, 0, logoSize, logoSize);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                data[i] = gray;
+                data[i + 1] = gray;
+                data[i + 2] = gray;
+                data[i + 3] = data[i + 3] * 0.45;
+            }
+            
+            logoCtx.putImageData(imageData, 0, 0);
+            
+            ctx.drawImage(logoCanvas, logoX, logoY);
+
+            console.log('[App] 워터마크 적용 완료, 이미지 저장 중...');
 
             tempCanvas.toBlob((blob) => {
+                console.log('[App] Blob 생성 완료:', blob.size, 'bytes');
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'chroma-' + Date.now() + '.png';
                 a.click();
                 URL.revokeObjectURL(url);
+                console.log('[App] 다운로드 완료');
             }, 'image/png');
         };
         
         logo.onerror = (e) => {
             console.error('[App] 로고 로드 실패:', e);
+            console.error('[App] 로고 경로 확인 필요: ./el-logo.png');
+            
             tempCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -326,6 +359,7 @@
         };
         
         logo.src = './el-logo.png';
+        console.log('[App] 로고 로딩 시작:', logo.src);
     }
 
     // ========== 리셋 ==========
