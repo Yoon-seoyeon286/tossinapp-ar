@@ -358,6 +358,14 @@
         const logoX = capturedScreenshot.width - logoSize - margin;
         const logoY = capturedScreenshot.height - logoSize - margin;
 
+        // 테스트용 빨간 사각형
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = 'red';
+        ctx.fillRect(logoX, logoY, logoSize, logoSize);
+        ctx.restore();
+        console.log('[App] 빨간 사각형 그리기 완료', { logoX, logoY, logoSize });
+
         // 미리 로드된 워터마크 이미지 사용
         if (watermarkImage && watermarkImage.complete && watermarkImage.naturalWidth > 0) {
             ctx.save();
@@ -394,6 +402,14 @@
         const margin = 20;
         const logoX = tempCanvas.width - logoSize - margin;
         const logoY = tempCanvas.height - logoSize - margin;
+
+        // 테스트용 빨간 사각형
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = 'red';
+        ctx.fillRect(logoX, logoY, logoSize, logoSize);
+        ctx.restore();
+        console.log('[App] 빨간 사각형 그리기 완료', { logoX, logoY, logoSize });
 
         if (watermarkImage && watermarkImage.complete && watermarkImage.naturalWidth > 0) {
             ctx.save();
