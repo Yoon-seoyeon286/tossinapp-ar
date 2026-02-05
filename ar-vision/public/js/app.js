@@ -309,9 +309,7 @@
             console.log('[App] 캔버스 크기:', tempCanvas.width, 'x', tempCanvas.height);
             console.log('[App] 로고 위치:', { logoX, logoY, logoSize });
 
-            ctx.globalAlpha = 0.4;
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
-            ctx.globalAlpha = 1.0;
 
             console.log('[App] 워터마크 적용 완료, 이미지 저장 중...');
 
