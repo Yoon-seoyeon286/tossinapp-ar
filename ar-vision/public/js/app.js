@@ -352,32 +352,40 @@
     function downloadCapturedScreenshot() {
         if (!capturedScreenshot) return;
 
-        const ctx = capturedScreenshot.getContext('2d');
-        const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.15;
+        // 새 캔버스에 복사 후 워터마크 추가
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = capturedScreenshot.width;
+        finalCanvas.height = capturedScreenshot.height;
+        const ctx = finalCanvas.getContext('2d');
+
+        // 원본 스크린샷 복사
+        ctx.drawImage(capturedScreenshot, 0, 0);
+
+        // 워터마크 크기 및 위치 (고정 크기로 테스트)
+        const logoSize = 80;
         const margin = 20;
-        const logoX = capturedScreenshot.width - logoSize - margin;
-        const logoY = capturedScreenshot.height - logoSize - margin;
+        const logoX = finalCanvas.width - logoSize - margin;
+        const logoY = finalCanvas.height - logoSize - margin;
+
+        console.log('[App] 캔버스 크기:', finalCanvas.width, finalCanvas.height);
+        console.log('[App] 워터마크 위치:', logoX, logoY, logoSize);
 
         // 테스트용 빨간 사각형
-        ctx.save();
-        ctx.globalAlpha = 0.6;
-        ctx.fillStyle = 'red';
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
         ctx.fillRect(logoX, logoY, logoSize, logoSize);
-        ctx.restore();
-        console.log('[App] 빨간 사각형 그리기 완료', { logoX, logoY, logoSize });
+        console.log('[App] 빨간 사각형 그리기 완료');
 
         // 미리 로드된 워터마크 이미지 사용
         if (watermarkImage && watermarkImage.complete && watermarkImage.naturalWidth > 0) {
-            ctx.save();
             ctx.globalAlpha = 0.6;
             ctx.drawImage(watermarkImage, logoX, logoY, logoSize, logoSize);
-            ctx.restore();
+            ctx.globalAlpha = 1.0;
             console.log('[App] 워터마크 그리기 완료');
         } else {
             console.warn('[App] 워터마크 이미지가 준비되지 않음');
         }
 
-        capturedScreenshot.toBlob((blob) => {
+        finalCanvas.toBlob((blob) => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -397,25 +405,24 @@
         const ctx = tempCanvas.getContext('2d');
         ctx.drawImage(results.chroma, 0, 0);
 
-        // 미리 로드된 워터마크 이미지 사용
-        const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.15;
+        // 워터마크 크기 및 위치 (고정 크기로 테스트)
+        const logoSize = 80;
         const margin = 20;
         const logoX = tempCanvas.width - logoSize - margin;
         const logoY = tempCanvas.height - logoSize - margin;
 
+        console.log('[App] 캔버스 크기:', tempCanvas.width, tempCanvas.height);
+        console.log('[App] 워터마크 위치:', logoX, logoY, logoSize);
+
         // 테스트용 빨간 사각형
-        ctx.save();
-        ctx.globalAlpha = 0.6;
-        ctx.fillStyle = 'red';
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
         ctx.fillRect(logoX, logoY, logoSize, logoSize);
-        ctx.restore();
-        console.log('[App] 빨간 사각형 그리기 완료', { logoX, logoY, logoSize });
+        console.log('[App] 빨간 사각형 그리기 완료');
 
         if (watermarkImage && watermarkImage.complete && watermarkImage.naturalWidth > 0) {
-            ctx.save();
             ctx.globalAlpha = 0.6;
             ctx.drawImage(watermarkImage, logoX, logoY, logoSize, logoSize);
-            ctx.restore();
+            ctx.globalAlpha = 1.0;
             console.log('[App] 워터마크 그리기 완료');
         } else {
             console.warn('[App] 워터마크 이미지가 준비되지 않음');
