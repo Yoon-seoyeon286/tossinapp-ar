@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR View - AR Vision</title>
+    <title>AR View - 가상내짤</title>
     <style>
         * {
             margin: 0;
@@ -76,7 +76,7 @@
         .btn-icon {
             width: 44px;
             height: 44px;
-            background: rgba(80, 88, 108, 0.7);
+            background: rgba(26, 46, 26, 0.8);
             border: none;
             border-radius: 50%;
             display: flex;
@@ -89,7 +89,7 @@
         }
 
         .btn-icon:hover {
-            background: rgba(80, 88, 108, 0.9);
+            background: rgba(36, 53, 36, 0.9);
             transform: scale(1.05);
         }
 
@@ -100,7 +100,7 @@
         .btn-icon svg {
             width: 24px;
             height: 24px;
-            stroke: #DCE2F0;
+            stroke: #7CB342;
             fill: none;
             stroke-width: 2;
         }
@@ -122,8 +122,8 @@
         .btn-capture {
             width: 70px;
             height: 70px;
-            background: #DCE2F0;
-            border: 4px solid rgba(80, 88, 108, 0.5);
+            background: #7CB342;
+            border: 4px solid rgba(26, 46, 26, 0.5);
             border-radius: 50%;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -134,7 +134,7 @@
 
         .btn-capture:hover {
             transform: scale(1.05);
-            box-shadow: 0 4px 20px rgba(220, 226, 240, 0.4);
+            box-shadow: 0 4px 20px rgba(124, 179, 66, 0.5);
         }
 
         .btn-capture:active {
@@ -144,16 +144,16 @@
         .btn-capture .inner-circle {
             width: 56px;
             height: 56px;
-            background: #DCE2F0;
+            background: #8BC34A;
             border-radius: 50%;
-            border: 2px solid rgba(80, 88, 108, 0.3);
+            border: 2px solid rgba(26, 46, 26, 0.3);
         }
 
         /* 사이드 버튼들 */
         .btn-side {
             width: 50px;
             height: 50px;
-            background: rgba(80, 88, 108, 0.7);
+            background: rgba(26, 46, 26, 0.8);
             border: none;
             border-radius: 50%;
             cursor: pointer;
@@ -166,7 +166,7 @@
         }
 
         .btn-side:hover {
-            background: rgba(80, 88, 108, 0.9);
+            background: rgba(36, 53, 36, 0.9);
             transform: scale(1.05);
         }
 
@@ -177,7 +177,7 @@
         .btn-side svg {
             width: 24px;
             height: 24px;
-            stroke: #DCE2F0;
+            stroke: #7CB342;
             fill: none;
             stroke-width: 2;
         }
@@ -189,7 +189,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #50586C 0%, #3d4455 100%);
+            background: linear-gradient(135deg, #1a2e1a 0%, #0f1f0f 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -204,8 +204,8 @@
         .loading-spinner {
             width: 50px;
             height: 50px;
-            border: 3px solid rgba(220, 226, 240, 0.2);
-            border-top-color: #DCE2F0;
+            border: 3px solid rgba(124, 179, 66, 0.2);
+            border-top-color: #7CB342;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -216,7 +216,7 @@
 
         .loading-text {
             margin-top: 20px;
-            color: #DCE2F0;
+            color: #C8E6C9;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 16px;
         }
@@ -228,7 +228,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #50586C 0%, #3d4455 100%);
+            background: linear-gradient(135deg, #1a2e1a 0%, #0f1f0f 100%);
             display: none;
             flex-direction: column;
             align-items: center;
@@ -261,7 +261,7 @@
         }
 
         .error-message {
-            color: #DCE2F0;
+            color: #C8E6C9;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 16px;
             text-align: center;
@@ -270,10 +270,10 @@
 
         .btn-error {
             padding: 16px 32px;
-            background: #DCE2F0;
+            background: #7CB342;
             border: none;
             border-radius: 30px;
-            color: #50586C;
+            color: #0f1f0f;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -285,13 +285,13 @@
 
         .btn-error:hover {
             transform: scale(1.02);
-            box-shadow: 0 4px 20px rgba(220, 226, 240, 0.3);
+            box-shadow: 0 4px 20px rgba(124, 179, 66, 0.4);
         }
 
         .btn-error svg {
             width: 20px;
             height: 20px;
-            stroke: #50586C;
+            stroke: #0f1f0f;
             fill: none;
             stroke-width: 2;
         }
@@ -302,10 +302,10 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(80, 88, 108, 0.95);
+            background: rgba(26, 46, 26, 0.95);
             padding: 24px 36px;
             border-radius: 16px;
-            color: #DCE2F0;
+            color: #C8E6C9;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 15px;
             text-align: center;
@@ -330,7 +330,7 @@
             font-size: 17px;
             font-weight: 600;
             margin-bottom: 12px;
-            color: #fff;
+            color: #7CB342;
         }
 
         .hint-overlay .hint-text {
@@ -344,7 +344,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #fff;
+            background: #7CB342;
             opacity: 0;
             pointer-events: none;
             z-index: 500;
@@ -361,8 +361,8 @@
             bottom: 140px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: rgba(80, 88, 108, 0.95);
-            color: #DCE2F0;
+            background: rgba(26, 46, 26, 0.95);
+            color: #7CB342;
             padding: 12px 24px;
             border-radius: 25px;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;

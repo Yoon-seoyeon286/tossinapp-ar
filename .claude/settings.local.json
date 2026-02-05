@@ -5,7 +5,11 @@
       "Bash(npm run build:*)",
       "Bash(npm start)",
       "Bash(npx webpack serve --mode development --port 3000)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(copy:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\panop\\Desktop\\works\\tossinapp-ar\\ar-vision\\public"
     ]
   }
 }
