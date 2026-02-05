@@ -287,16 +287,21 @@
         ctx.drawImage(results.chroma, 0, 0);
 
         const logo = new Image();
+        logo.crossOrigin = 'anonymous';
+        
         logo.onload = () => {
-            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.08;
-            const logoX = tempCanvas.width - logoSize - 20;
-            const logoY = tempCanvas.height - logoSize - 20;
+            console.log('[App] 로고 로드 성공');
+            
+            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.1;
+            const margin = 15;
+            const logoX = tempCanvas.width - logoSize - margin;
+            const logoY = tempCanvas.height - logoSize - margin;
 
+            ctx.save();
             ctx.filter = 'grayscale(100%)';
-            ctx.globalAlpha = 0.5;
+            ctx.globalAlpha = 0.45;
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
-            ctx.filter = 'none';
-            ctx.globalAlpha = 1.0;
+            ctx.restore();
 
             tempCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
@@ -307,7 +312,9 @@
                 URL.revokeObjectURL(url);
             }, 'image/png');
         };
-        logo.onerror = () => {
+        
+        logo.onerror = (e) => {
+            console.error('[App] 로고 로드 실패:', e);
             tempCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -317,7 +324,8 @@
                 URL.revokeObjectURL(url);
             }, 'image/png');
         };
-        logo.src = 'el-logo.png';
+        
+        logo.src = './el-logo.png';
     }
 
     // ========== 리셋 ==========
