@@ -342,16 +342,24 @@
 
     function downloadCapturedScreenshot() {
         if (!capturedScreenshot) return;
+        console.log('[App] AR 스크린샷 워터마크 합성 시작');
 
         const logo = new Image();
         logo.onload = () => {
+            console.log('[App] 워터마크 로드 완료, 그리기 시작');
             const ctx = capturedScreenshot.getContext('2d');
-            const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.20;
-            const margin = 25;
+            const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.25; // 25% 로 확대
+            const margin = 30;
             const logoX = capturedScreenshot.width - logoSize - margin;
             const logoY = capturedScreenshot.height - logoSize - margin;
 
-            ctx.globalAlpha = 0.8;
+            // 디버그용: 빨간색 테두리 그리기 (나중에 제거)
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 5;
+            ctx.strokeRect(logoX, logoY, logoSize, logoSize);
+
+            // 로고 그리기
+            ctx.globalAlpha = 1.0; // 완전 불투명하게 테스트
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
             ctx.globalAlpha = 1.0;
 
@@ -359,24 +367,23 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'ar-screenshot-' + Date.now() + '.png';
+                a.download = 'ar-capture-' + Date.now() + '.png';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                console.log('[App] 다운로드 실행 완료 (Blob: ' + blob.size + ')');
             }, 'image/png');
         };
 
         logo.onerror = () => {
-            console.warn('[App] 워터마크 이미지 로드 실패, 원본 다운로드');
+            console.error('[App] el-logo.png 로딩 실패! 원본만 저장합니다.');
             capturedScreenshot.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'ar-screenshot-' + Date.now() + '.png';
-                document.body.appendChild(a);
+                a.download = 'ar-capture-fallback-' + Date.now() + '.png';
                 a.click();
-                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }, 'image/png');
         };
@@ -395,37 +402,31 @@
 
         const logo = new Image();
         logo.onload = () => {
-            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.20;
-            const margin = 25;
+            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.25;
+            const margin = 30;
             const logoX = tempCanvas.width - logoSize - margin;
             const logoY = tempCanvas.height - logoSize - margin;
 
-            ctx.globalAlpha = 0.8;
+            ctx.globalAlpha = 0.9;
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
-            ctx.globalAlpha = 1.0;
 
             tempCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'chroma-' + Date.now() + '.png';
-                document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }, 'image/png');
         };
 
         logo.onerror = () => {
-            console.warn('[App] 크로마 워터마크 로드 실패');
-            tempCanvas.toBlob((blob) => {
+            results.chroma.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'chroma-' + Date.now() + '.png';
-                document.body.appendChild(a);
+                a.download = 'chroma-fallback-' + Date.now() + '.png';
                 a.click();
-                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }, 'image/png');
         };

@@ -37,6 +37,10 @@ window.Watermark = {
                 }
 
                 ctx.save();
+                // DEBUG: 빨간색 테스트 사각형 (워터마크 위치 확인용)
+                ctx.fillStyle = 'red';
+                ctx.fillRect(x, y, 10, 10);
+
                 ctx.globalAlpha = config.opacity;
                 ctx.drawImage(logo, x, y, logoSize, logoSize);
                 ctx.restore();

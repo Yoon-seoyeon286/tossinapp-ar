@@ -965,16 +965,22 @@
                 }
 
                 // 최후의 데이터를 Blob으로 변환
-                const finalDataUrl = finalCanvas.toDataURL('image/png');
-                lastCapturedBlob = await (await fetch(finalDataUrl)).blob();
+                finalCanvas.toBlob((blob) => {
+                    if (blob) {
+                        lastCapturedBlob = blob;
+                        console.log('[AR] Blob 생성 완료:', blob.size, 'bytes');
 
-                // 다운로드 버튼 활성화
-                const downloadBtn = document.getElementById('btn-download');
-                downloadBtn.style.opacity = '1';
-                downloadBtn.style.pointerEvents = 'auto';
+                        // 다운로드 버튼 활성화
+                        const downloadBtn = document.getElementById('btn-download');
+                        downloadBtn.style.opacity = '1';
+                        downloadBtn.style.pointerEvents = 'auto';
 
-                showToast('캡처 성공! 저장 버튼(우측)을 누르세요.');
-                console.log('[AR] 캡처 및 저장 준비 완료 (Blob size: ' + lastCapturedBlob.size + ')');
+                        showToast('캡처 성공! 저장 버튼(우측)을 누르세요.');
+                    } else {
+                        console.error('[AR] Blob 생성 실패');
+                        showToast('캡처 실패 (Canvas 오류)');
+                    }
+                }, 'image/png');
 
             } catch (err) {
                 console.error('[AR] 캡처 중 치명적 오류:', err);
