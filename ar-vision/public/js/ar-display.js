@@ -31,6 +31,21 @@ class ARDisplay {
         this.maxScale = 2.0;
 
         this._boundAnimate = this._animate.bind(this);
+
+        // 워터마크 이미지
+        this.watermarkImage = null;
+        this._loadWatermark();
+    }
+
+    /**
+     * 워터마크 이미지 로드
+     */
+    _loadWatermark() {
+        this.watermarkImage = new Image();
+        this.watermarkImage.src = 'el-logo.png';
+        this.watermarkImage.onload = () => {
+            console.log('[ARDisplay] 워터마크 이미지 로드 완료');
+        };
     }
 
     /**
@@ -175,6 +190,18 @@ class ARDisplay {
 
         // 2. AR 캔버스 (Three.js 렌더링) 오버레이
         ctx.drawImage(this.canvas, 0, 0);
+
+        // 3. 워터마크 그리기 (오른쪽 하단, 반투명)
+        if (this.watermarkImage && this.watermarkImage.complete) {
+            const watermarkSize = 60;
+            const margin = 20;
+            const x = screenshotCanvas.width - watermarkSize - margin;
+            const y = screenshotCanvas.height - watermarkSize - margin;
+
+            ctx.globalAlpha = 0.6;
+            ctx.drawImage(this.watermarkImage, x, y, watermarkSize, watermarkSize);
+            ctx.globalAlpha = 1.0;
+        }
 
         console.log('[ARDisplay] 스크린샷 캡처 완료');
         return screenshotCanvas;
