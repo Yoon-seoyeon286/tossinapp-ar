@@ -9,6 +9,9 @@
     let backgroundRemover = null;
     let arDisplay = null;
 
+    // 워터마크 이미지 (미리 로드)
+    let watermarkImage = null;
+
     // 처리 결과 저장
     let results = {
         original: null,
@@ -58,6 +61,12 @@
     // ========== 초기화 ==========
     function init() {
         console.log('[App] 초기화 시작');
+
+        // 워터마크 이미지 미리 로드
+        watermarkImage = new Image();
+        watermarkImage.src = 'el-logo.png';
+        watermarkImage.onload = () => console.log('[App] 워터마크 이미지 로드 완료');
+        watermarkImage.onerror = () => console.error('[App] 워터마크 이미지 로드 실패');
 
         // 파일 입력 이벤트
         $uploadBtn.addEventListener('click', () => $fileInput.click());
@@ -349,13 +358,11 @@
         const logoX = capturedScreenshot.width - logoSize - margin;
         const logoY = capturedScreenshot.height - logoSize - margin;
 
-        // DOM에서 이미 로드된 워터마크 이미지 사용
-        const logo = document.querySelector('.rt-watermark');
-
-        if (logo && logo.complete && logo.naturalWidth > 0) {
+        // 미리 로드된 워터마크 이미지 사용
+        if (watermarkImage && watermarkImage.complete && watermarkImage.naturalWidth > 0) {
             ctx.save();
             ctx.globalAlpha = 0.6;
-            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            ctx.drawImage(watermarkImage, logoX, logoY, logoSize, logoSize);
             ctx.restore();
             console.log('[App] 워터마크 그리기 완료');
         } else {
@@ -382,17 +389,16 @@
         const ctx = tempCanvas.getContext('2d');
         ctx.drawImage(results.chroma, 0, 0);
 
-        // DOM에서 이미 로드된 워터마크 이미지 사용
-        const logo = document.querySelector('.rt-watermark');
+        // 미리 로드된 워터마크 이미지 사용
         const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.15;
         const margin = 20;
         const logoX = tempCanvas.width - logoSize - margin;
         const logoY = tempCanvas.height - logoSize - margin;
 
-        if (logo && logo.complete && logo.naturalWidth > 0) {
+        if (watermarkImage && watermarkImage.complete && watermarkImage.naturalWidth > 0) {
             ctx.save();
             ctx.globalAlpha = 0.6;
-            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            ctx.drawImage(watermarkImage, logoX, logoY, logoSize, logoSize);
             ctx.restore();
             console.log('[App] 워터마크 그리기 완료');
         } else {
