@@ -9,11 +9,11 @@ const Watermark = {
      * @param {Object} options - 옵션 (opacity, sizeRatio, margin)
      * @returns {Promise<HTMLCanvasElement>}
      */
-    apply: function(canvas, logoSrc, options = {}) {
+    apply: function (canvas, logoSrc, options = {}) {
         return new Promise((resolve, reject) => {
             const {
-                opacity = 0.5,
-                sizeRatio = 0.15,
+                opacity = 0.8,    // Increased from 0.5
+                sizeRatio = 0.20, // Increased from 0.15
                 margin = 20
             } = options;
 

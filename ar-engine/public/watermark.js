@@ -13,9 +13,9 @@ window.Watermark = {
     apply: function (canvas, logoUrl, options = {}) {
         return new Promise((resolve, reject) => {
             const defaults = {
-                opacity: 0.5,
+                opacity: 0.8,    // Increased from 0.5
                 margin: 20,
-                sizeRatio: 0.15, // 15% of the smallest side
+                sizeRatio: 0.20, // Increased from 0.15
                 position: 'bottom-right'
             };
             const config = { ...defaults, ...options };

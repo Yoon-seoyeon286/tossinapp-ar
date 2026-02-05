@@ -164,6 +164,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            text-align: center;
         }
 
         .btn-side:hover {
@@ -222,6 +223,7 @@
             color: #C8E6C9;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 16px;
+            text-align: center;
         }
 
         /* 에러 화면 */
@@ -282,6 +284,8 @@
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
+            text-align: center;
             gap: 8px;
             transition: all 0.2s ease;
         }
@@ -338,6 +342,7 @@
 
         .hint-overlay .hint-text {
             opacity: 0.9;
+            text-align: center;
         }
 
         /* 캡처 플래시 효과 */
@@ -377,6 +382,10 @@
             z-index: 300;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
         }
 
         .toast.visible {
@@ -900,6 +909,8 @@
                 flash.classList.add('flash');
                 setTimeout(() => flash.classList.remove('flash'), 100);
 
+                showToast('캡처 중... 잠시만 기다려주세요');
+
                 // 캡처용 임시 캔버스 생성
                 const canvas = document.createElement('canvas');
                 canvas.width = arCanvas.width;
@@ -913,29 +924,31 @@
                 // AR 오버레이 합성
                 ctx.drawImage(arCanvas, 0, 0);
 
-                // 즉시 활성화 (먼저 데이터화)
-                const dataUrl = canvas.toDataURL('image/png');
-                lastCapturedBlob = await (await fetch(dataUrl)).blob(); // Blob으로 변환하여 저장
+                // 워터마크 적용 시도
+                let finalCanvas = canvas;
+                try {
+                    console.log('[AR] 워터마크 적용 시도 중...');
+                    finalCanvas = await Watermark.apply(canvas, 'logo.png', {
+                        opacity: 0.8,
+                        sizeRatio: 0.2,
+                        margin: 25
+                    });
+                    console.log('[AR] 워터마크 적용 성공');
+                } catch (wmErr) {
+                    console.warn('[AR] 워터마크 적용 실패, 원본 유지:', wmErr);
+                }
 
+                // 최후의 데이터를 Blob으로 변환
+                const finalDataUrl = finalCanvas.toDataURL('image/png');
+                lastCapturedBlob = await (await fetch(finalDataUrl)).blob();
+
+                // 다운로드 버튼 활성화
                 const downloadBtn = document.getElementById('btn-download');
                 downloadBtn.style.opacity = '1';
                 downloadBtn.style.pointerEvents = 'auto';
 
-                showToast('캡처 성공! 저장 버튼을 누르세요.');
-
-                // 워터마크는 백그라운드에서 시도 (실패해도 캡처본은 유지)
-                try {
-                    const watermarkedCanvas = await Watermark.apply(canvas, 'logo.png', {
-                        opacity: 0.5,
-                        sizeRatio: 0.15,
-                        margin: 20
-                    });
-                    const wmUrl = watermarkedCanvas.toDataURL('image/png');
-                    lastCapturedBlob = await (await fetch(wmUrl)).blob();
-                    console.log('[AR] 워터마크 적용 완료');
-                } catch (wmErr) {
-                    console.warn('[AR] 워터마크 적용 실패, 원본 캡처 유지:', wmErr);
-                }
+                showToast('캡처 성공! 저장 버튼(우측)을 누르세요.');
+                console.log('[AR] 캡처 및 저장 준비 완료 (Blob size: ' + lastCapturedBlob.size + ')');
 
             } catch (err) {
                 console.error('[AR] 캡처 중 치명적 오류:', err);
