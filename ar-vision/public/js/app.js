@@ -47,9 +47,13 @@
     const $cameraVideo = document.getElementById('camera-video');
     const $arCanvas = document.getElementById('ar-canvas');
     const $arControls = document.getElementById('ar-controls');
+    const $arCaptureBtn = document.getElementById('ar-capture-btn');
 
     // 현재 활성화된 탭
     let currentTab = 'original';
+    
+    // 촬영된 스크린샷 저장
+    let capturedScreenshot = null;
 
     // ========== 초기화 ==========
     function init() {
@@ -69,6 +73,7 @@
         $resetBtn.addEventListener('click', resetSelection);
         $newImageBtn.addEventListener('click', resetAll);
         $downloadChromaBtn.addEventListener('click', handleDownload);
+        $arCaptureBtn.addEventListener('click', captureARScreenshot);
 
         // 탭 이벤트
         $tabBtns.forEach(btn => {
@@ -81,6 +86,9 @@
                 $arControls.style.display = 'none';
             });
         }
+        
+        // 초기 상태: 저장 버튼 비활성화
+        updateDownloadButton();
 
         console.log('[App] 초기화 완료');
     }
@@ -256,9 +264,12 @@
         // AR 탭일 경우 AR 디스플레이 시작
         if (tabName === 'ar') {
             startARMode();
+            capturedScreenshot = null; // AR 탭 진입 시 촬영 초기화
         } else {
             stopARMode();
         }
+        
+        updateDownloadButton();
     }
 
     // ========== AR 모드 ==========
@@ -289,9 +300,25 @@
     }
 
     // ========== 다운로드 ==========
+    function updateDownloadButton() {
+        if (currentTab === 'ar') {
+            // AR 탭에서는 촬영했을 때만 활성화
+            $downloadChromaBtn.disabled = !capturedScreenshot;
+            $downloadChromaBtn.style.opacity = capturedScreenshot ? '1' : '0.5';
+            $downloadChromaBtn.style.cursor = capturedScreenshot ? 'pointer' : 'not-allowed';
+        } else {
+            // 다른 탭에서는 항상 활성화
+            $downloadChromaBtn.disabled = false;
+            $downloadChromaBtn.style.opacity = '1';
+            $downloadChromaBtn.style.cursor = 'pointer';
+        }
+    }
+
     function handleDownload() {
         if (currentTab === 'ar') {
-            captureARScreenshot();
+            if (capturedScreenshot) {
+                downloadCapturedScreenshot();
+            }
         } else {
             downloadChromaImage();
         }
@@ -303,21 +330,27 @@
             return;
         }
 
-        const screenshotCanvas = arDisplay.captureScreenshot();
+        capturedScreenshot = arDisplay.captureScreenshot();
+        updateDownloadButton();
+        alert('촬영 완료! 저장 버튼을 눌러 이미지를 다운로드하세요.');
+    }
+
+    function downloadCapturedScreenshot() {
+        if (!capturedScreenshot) return;
 
         const logo = new Image();
         logo.onload = () => {
-            const ctx = screenshotCanvas.getContext('2d');
-            const logoSize = Math.min(screenshotCanvas.width, screenshotCanvas.height) * 0.15;
+            const ctx = capturedScreenshot.getContext('2d');
+            const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.15;
             const margin = 20;
-            const logoX = screenshotCanvas.width - logoSize - margin;
-            const logoY = screenshotCanvas.height - logoSize - margin;
+            const logoX = capturedScreenshot.width - logoSize - margin;
+            const logoY = capturedScreenshot.height - logoSize - margin;
 
             ctx.globalAlpha = 0.5;
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
             ctx.globalAlpha = 1.0;
 
-            screenshotCanvas.toBlob((blob) => {
+            capturedScreenshot.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -330,7 +363,7 @@
         };
         
         logo.onerror = () => {
-            screenshotCanvas.toBlob((blob) => {
+            capturedScreenshot.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
