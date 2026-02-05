@@ -290,8 +290,6 @@
 
     // ========== 다운로드 ==========
     function handleDownload() {
-        console.log('[App] 다운로드 버튼 클릭, 현재 탭:', currentTab);
-        
         if (currentTab === 'ar') {
             captureARScreenshot();
         } else {
@@ -301,49 +299,54 @@
 
     function captureARScreenshot() {
         if (!arDisplay) {
-            console.error('[App] AR Display가 없습니다');
+            alert('AR 모드를 먼저 시작해주세요.');
             return;
         }
 
-        console.log('[App] AR 스크린샷 캡처 시작');
-
         const screenshotCanvas = arDisplay.captureScreenshot();
 
-        Watermark.apply(screenshotCanvas, './el-logo.png', {
-            opacity: 0.5,
-            sizeRatio: 0.15,
-            margin: 20
-        }).then((canvas) => {
-            console.log('[App] 워터마크 적용 완료, 이미지 저장 중...');
+        const logo = new Image();
+        logo.onload = () => {
+            const ctx = screenshotCanvas.getContext('2d');
+            const logoSize = Math.min(screenshotCanvas.width, screenshotCanvas.height) * 0.15;
+            const margin = 20;
+            const logoX = screenshotCanvas.width - logoSize - margin;
+            const logoY = screenshotCanvas.height - logoSize - margin;
 
-            canvas.toBlob((blob) => {
-                console.log('[App] Blob 생성 완료:', blob.size, 'bytes');
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ar-screenshot-' + Date.now() + '.png';
-                a.click();
-                URL.revokeObjectURL(url);
-                console.log('[App] AR 스크린샷 다운로드 완료');
-            }, 'image/png');
-        }).catch((err) => {
-            console.error('[App] 워터마크 적용 실패:', err);
-            
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            ctx.globalAlpha = 1.0;
+
             screenshotCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'ar-screenshot-' + Date.now() + '.png';
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }, 'image/png');
-        });
+        };
+        
+        logo.onerror = () => {
+            screenshotCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ar-screenshot-' + Date.now() + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        };
+        
+        logo.src = './el-logo.png';
     }
 
     function downloadChromaImage() {
         if (!results.chroma) return;
-
-        console.log('[App] 다운로드 시작');
 
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = results.chroma.width;
@@ -351,35 +354,43 @@
         const ctx = tempCanvas.getContext('2d');
         ctx.drawImage(results.chroma, 0, 0);
 
-        Watermark.apply(tempCanvas, './el-logo.png', {
-            opacity: 0.5,
-            sizeRatio: 0.15,
-            margin: 20
-        }).then((canvas) => {
-            console.log('[App] 워터마크 적용 완료, 이미지 저장 중...');
+        const logo = new Image();
+        logo.onload = () => {
+            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.15;
+            const margin = 20;
+            const logoX = tempCanvas.width - logoSize - margin;
+            const logoY = tempCanvas.height - logoSize - margin;
 
-            canvas.toBlob((blob) => {
-                console.log('[App] Blob 생성 완료:', blob.size, 'bytes');
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'chroma-' + Date.now() + '.png';
-                a.click();
-                URL.revokeObjectURL(url);
-                console.log('[App] 다운로드 완료');
-            }, 'image/png');
-        }).catch((err) => {
-            console.error('[App] 워터마크 적용 실패:', err);
-            
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            ctx.globalAlpha = 1.0;
+
             tempCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'chroma-' + Date.now() + '.png';
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }, 'image/png');
-        });
+        };
+        
+        logo.onerror = () => {
+            tempCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'chroma-' + Date.now() + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        };
+        
+        logo.src = './el-logo.png';
     }
 
     // ========== 리셋 ==========
