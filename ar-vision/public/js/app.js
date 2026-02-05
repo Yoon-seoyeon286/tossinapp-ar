@@ -346,12 +346,12 @@
         const logo = new Image();
         logo.onload = () => {
             const ctx = capturedScreenshot.getContext('2d');
-            const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.15;
-            const margin = 20;
+            const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.20;
+            const margin = 25;
             const logoX = capturedScreenshot.width - logoSize - margin;
             const logoY = capturedScreenshot.height - logoSize - margin;
 
-            ctx.globalAlpha = 0.5;
+            ctx.globalAlpha = 0.8;
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
             ctx.globalAlpha = 1.0;
 
@@ -368,6 +368,7 @@
         };
 
         logo.onerror = () => {
+            console.warn('[App] 워터마크 이미지 로드 실패, 원본 다운로드');
             capturedScreenshot.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -380,7 +381,7 @@
             }, 'image/png');
         };
 
-        logo.src = './el-logo.png';
+        logo.src = 'el-logo.png';
     }
 
     function downloadChromaImage() {
@@ -394,12 +395,12 @@
 
         const logo = new Image();
         logo.onload = () => {
-            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.15;
-            const margin = 20;
+            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.20;
+            const margin = 25;
             const logoX = tempCanvas.width - logoSize - margin;
             const logoY = tempCanvas.height - logoSize - margin;
 
-            ctx.globalAlpha = 0.5;
+            ctx.globalAlpha = 0.8;
             ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
             ctx.globalAlpha = 1.0;
 
@@ -416,6 +417,7 @@
         };
 
         logo.onerror = () => {
+            console.warn('[App] 크로마 워터마크 로드 실패');
             tempCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -428,7 +430,7 @@
             }, 'image/png');
         };
 
-        logo.src = './el-logo.png';
+        logo.src = 'el-logo.png';
     }
 
     // ========== 리셋 ==========

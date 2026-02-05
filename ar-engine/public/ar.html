@@ -403,8 +403,7 @@
             height: 80px;
             opacity: 0.5;
             pointer-events: none;
-            z-index: 150;
-            /* UI 버튼들(100)보다 위에 배치 */
+            z-index: 50;
             object-fit: contain;
         }
     </style>
@@ -412,7 +411,7 @@
 
 <body>
     <!-- 실시간 워터마크 안내용 -->
-    <img src="logo.png" alt="watermark" class="rt-watermark">
+    <img src="el-logo.png" alt="watermark" class="rt-watermark" onerror="this.src='logo.png'">
 
     <!-- 로딩 화면 -->
     <div id="loading-screen">
@@ -944,15 +943,25 @@
                 // 워터마크 적용 시도
                 let finalCanvas = canvas;
                 try {
-                    console.log('[AR] 워터마크 적용 시도 중...');
-                    finalCanvas = await Watermark.apply(canvas, 'logo.png', {
-                        opacity: 0.8,
-                        sizeRatio: 0.2,
-                        margin: 25
-                    });
-                    console.log('[AR] 워터마크 적용 성공');
+                    console.log('[AR] 워터마크 적용 시도 중 (el-logo.png)...');
+                    try {
+                        finalCanvas = await Watermark.apply(canvas, 'el-logo.png', {
+                            opacity: 0.8,
+                            sizeRatio: 0.2,
+                            margin: 25
+                        });
+                        console.log('[AR] el-logo.png 적용 성공');
+                    } catch (e) {
+                        console.warn('[AR] el-logo.png 실패, logo.png로 재시도...');
+                        finalCanvas = await Watermark.apply(canvas, 'logo.png', {
+                            opacity: 0.8,
+                            sizeRatio: 0.2,
+                            margin: 25
+                        });
+                        console.log('[AR] logo.png 적용 성공');
+                    }
                 } catch (wmErr) {
-                    console.warn('[AR] 워터마크 적용 실패, 원본 유지:', wmErr);
+                    console.warn('[AR] 모든 워터마크 적용 실패, 원본 유지:', wmErr);
                 }
 
                 // 최후의 데이터를 Blob으로 변환
