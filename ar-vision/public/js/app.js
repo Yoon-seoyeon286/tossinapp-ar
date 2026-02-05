@@ -47,6 +47,7 @@
     const $cameraVideo = document.getElementById('camera-video');
     const $arCanvas = document.getElementById('ar-canvas');
     const $arControls = document.getElementById('ar-controls');
+    const $arCaptureBtn = document.getElementById('ar-capture-btn');
 
     // ========== 초기화 ==========
     function init() {
@@ -66,6 +67,7 @@
         $resetBtn.addEventListener('click', resetSelection);
         $newImageBtn.addEventListener('click', resetAll);
         $downloadChromaBtn.addEventListener('click', downloadChromaImage);
+        $arCaptureBtn.addEventListener('click', captureARScreenshot);
 
         // 탭 이벤트
         $tabBtns.forEach(btn => {
@@ -284,6 +286,47 @@
     }
 
     // ========== 다운로드 ==========
+    function captureARScreenshot() {
+        if (!arDisplay) {
+            console.error('[App] AR Display가 없습니다');
+            return;
+        }
+
+        console.log('[App] AR 스크린샷 캡처 시작');
+
+        const screenshotCanvas = arDisplay.captureScreenshot();
+
+        Watermark.apply(screenshotCanvas, './el-logo.png', {
+            opacity: 0.5,
+            sizeRatio: 0.15,
+            margin: 20
+        }).then((canvas) => {
+            console.log('[App] 워터마크 적용 완료, 이미지 저장 중...');
+
+            canvas.toBlob((blob) => {
+                console.log('[App] Blob 생성 완료:', blob.size, 'bytes');
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ar-screenshot-' + Date.now() + '.png';
+                a.click();
+                URL.revokeObjectURL(url);
+                console.log('[App] AR 스크린샷 다운로드 완료');
+            }, 'image/png');
+        }).catch((err) => {
+            console.error('[App] 워터마크 적용 실패:', err);
+            
+            screenshotCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ar-screenshot-' + Date.now() + '.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        });
+    }
+
     function downloadChromaImage() {
         if (!results.chroma) return;
 

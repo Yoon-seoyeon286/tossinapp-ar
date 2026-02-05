@@ -161,6 +161,26 @@ class ARDisplay {
     }
 
     /**
+     * AR 화면 스크린샷 캡처
+     * @returns {HTMLCanvasElement} 캡처된 캔버스
+     */
+    captureScreenshot() {
+        const screenshotCanvas = document.createElement('canvas');
+        screenshotCanvas.width = this.container.clientWidth;
+        screenshotCanvas.height = this.container.clientHeight;
+        const ctx = screenshotCanvas.getContext('2d');
+
+        // 1. 비디오 피드 그리기
+        ctx.drawImage(this.video, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
+
+        // 2. AR 캔버스 (Three.js 렌더링) 오버레이
+        ctx.drawImage(this.canvas, 0, 0);
+
+        console.log('[ARDisplay] 스크린샷 캡처 완료');
+        return screenshotCanvas;
+    }
+
+    /**
      * 리소스 정리
      */
     dispose() {
