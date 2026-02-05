@@ -287,13 +287,12 @@
     function downloadChromaImage() {
         if (!results.chroma) return;
 
-        console.log('[App] 다운로드 시작 - 워터마크 적용 (watermark.js 사용)');
+        console.log('[App] 다운로드 시작');
 
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = results.chroma.width;
         tempCanvas.height = results.chroma.height;
         const ctx = tempCanvas.getContext('2d');
-
         ctx.drawImage(results.chroma, 0, 0);
 
         Watermark.apply(tempCanvas, './el-logo.png', {
@@ -312,6 +311,17 @@
                 a.click();
                 URL.revokeObjectURL(url);
                 console.log('[App] 다운로드 완료');
+            }, 'image/png');
+        }).catch((err) => {
+            console.error('[App] 워터마크 적용 실패:', err);
+            
+            tempCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'chroma-' + Date.now() + '.png';
+                a.click();
+                URL.revokeObjectURL(url);
             }, 'image/png');
         });
     }
