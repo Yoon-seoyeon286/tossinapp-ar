@@ -522,6 +522,7 @@
         let isRunning = false;
         let currentFacing = 'environment';
         let lastCapturedBlob = null;
+        let logoImage = null; // 로고 프리로드용
 
         // 센서 상태
         let deviceOrientation = { alpha: 0, beta: 0, gamma: 0 };
@@ -606,6 +607,11 @@
                 initSensors();
 
                 initEvents();
+
+                // 로고 프리로드
+                logoImage = new Image();
+                logoImage.src = 'logo.png';
+                logoImage.onerror = () => logoImage.src = 'el-logo.png';
 
                 hideLoading();
                 showHint();
@@ -940,7 +946,6 @@
                 // AR 오버레이 합성
                 ctx.drawImage(arCanvas, 0, 0);
 
-<<<<<<< HEAD
                 // 3. 워터마크 로고 직접 합성 (비율 유지)
                 if (logoImage && logoImage.complete && logoImage.naturalWidth > 0) {
                     const logoAspect = logoImage.naturalWidth / logoImage.naturalHeight;
@@ -956,23 +961,11 @@
                     ctx.drawImage(logoImage, lx, ly, lWidth, lHeight);
                     ctx.restore();
                     console.log('[AR] 워터마크 직접 합성 완료 (비율 유지)');
-=======
-                console.log('[AR] 합성 완료, 워터마크 적용 시작...');
-
-                // Watermark 유틸리티 존재 여부 확인
-                const watermarkObj = window.Watermark || (typeof Watermark !== 'undefined' ? Watermark : null);
-
-                if (watermarkObj && watermarkObj.apply) {
-                    // Watermark 유틸리티 사용 (logo.png)
-                    await watermarkObj.apply(canvas, './logo.png', {
-                        opacity: 0.8,
-                        sizeRatio: 0.20,
-                        margin: 30
-                    });
-                    console.log('[AR] 워터마크 적용 프로세스 완료');
->>>>>>> parent of fec774f (qlehdrl)
                 } else {
-                    console.warn('[AR] Watermark utility is not defined. Skipping watermark.');
+                    console.warn('[AR] 워터마크 이미지가 준비되지 않아 텍스트로 보완');
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.font = 'bold 30px sans-serif';
+                    ctx.fillText('LOGO', canvas.width - 150, canvas.height - 50);
                 }
 
                 // 최후의 데이터를 Blob으로 변환
