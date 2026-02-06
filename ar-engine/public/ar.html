@@ -1033,13 +1033,58 @@
 
             const filename = 'ar-capture-' + Date.now() + '.png';
             const url = URL.createObjectURL(lastCapturedBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-
-            showToast('갤러리에 저장되었습니다');
+            
+            // iOS Safari 감지
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            
+            if (isIOS) {
+                // iOS: 새 창에서 이미지 열기 (길게 눌러 저장)
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Data URL로 변환하여 새 창에서 열기
+                    const dataURL = canvas.toDataURL('image/png');
+                    const newWindow = window.open();
+                    if (newWindow) {
+                        newWindow.document.write(`
+                            <html>
+                            <head>
+                                <title>사진 저장</title>
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <style>
+                                    body { margin: 0; padding: 20px; background: #000; text-align: center; }
+                                    img { max-width: 100%; height: auto; }
+                                    p { color: #fff; font-family: sans-serif; margin: 20px 0; }
+                                </style>
+                            </head>
+                            <body>
+                                <p>이미지를 길게 눌러 "사진 앱에 저장"을 선택하세요</p>
+                                <img src="${dataURL}" alt="AR Capture" />
+                            </body>
+                            </html>
+                        `);
+                        newWindow.document.close();
+                    }
+                    URL.revokeObjectURL(url);
+                    showToast('새 창에서 이미지를 길게 눌러 저장하세요');
+                };
+                img.src = url;
+            } else {
+                // Android/PC: 일반 다운로드
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('갤러리에 저장되었습니다');
+            }
         }
 
         // === 리사이즈 ===
