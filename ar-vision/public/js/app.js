@@ -350,57 +350,26 @@
         alert('촬영 완료! 저장 버튼을 눌러 이미지를 다운로드하세요.');
     }
 
-    async function downloadCapturedScreenshot() {
+    function downloadCapturedScreenshot() {
         if (!capturedScreenshot) return;
 
-        console.log('[App] 스크린샷 저장 프로세스 시작');
+        console.log('[App] 스크린샷 저장 시작');
 
-        try {
-            const logoSrc = './logo.png';
-            const watermarkObj = window.Watermark;
-
-            if (!watermarkObj || !watermarkObj.apply) {
-                console.error('[App] Watermark utility missing!');
-                throw new Error('Watermark utility is not loaded');
+        capturedScreenshot.toBlob((blob) => {
+            if (!blob) {
+                alert('이미지 생성에 실패했습니다.');
+                return;
             }
-
-            // 워터마크 적용 (캔버스에 직접 그려짐)
-            const finalCanvas = await watermarkObj.apply(capturedScreenshot, logoSrc, {
-                opacity: 0.85,
-                sizeRatio: 0.22,
-                margin: 40
-            });
-
-            console.log('[App] 워터마크 합성 단계 완료, 파일 변환 중...');
-
-            finalCanvas.toBlob((blob) => {
-                if (!blob) {
-                    alert('파일 생성에 실패했습니다.');
-                    return;
-                }
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ar-capture-' + Date.now() + '.png';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                console.log('[App] 최종 저장 완료');
-            }, 'image/png');
-
-        } catch (error) {
-            console.error('[App] 워터마크 적용 중 오류:', error);
-            // 오류 발생 시에도 캡처본은 저장되도록 보장
-            capturedScreenshot.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ar-capture-fallback.png';
-                a.click();
-                URL.revokeObjectURL(url);
-            }, 'image/png');
-        }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ar-capture-' + Date.now() + '.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            console.log('[App] 저장 완료');
+        }, 'image/png');
     }
 
     async function downloadChromaImage() {

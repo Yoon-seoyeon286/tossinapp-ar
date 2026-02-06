@@ -42,9 +42,13 @@ class ARDisplay {
      */
     _loadWatermark() {
         this.watermarkImage = new Image();
-        this.watermarkImage.src = 'el-logo.png';
+        this.watermarkImage.src = 'logo.png';
+        this.watermarkImage.onerror = () => {
+            console.log('[ARDisplay] logo.png 로드 실패, el-logo.png 시도');
+            this.watermarkImage.src = 'el-logo.png';
+        };
         this.watermarkImage.onload = () => {
-            console.log('[ARDisplay] 워터마크 이미지 로드 완료');
+            console.log('[ARDisplay] 워터마크 이미지 준비 완료');
         };
     }
 
@@ -182,16 +186,37 @@ class ARDisplay {
      */
     captureScreenshot() {
         const screenshotCanvas = document.createElement('canvas');
-        screenshotCanvas.width = this.container.clientWidth;
-        screenshotCanvas.height = this.container.clientHeight;
+        // 해상도를 위해 실제 비디오 크기 또는 컨테이너 크기 사용
+        const width = this.video.videoWidth || this.container.clientWidth;
+        const height = this.video.videoHeight || this.container.clientHeight;
+
+        screenshotCanvas.width = width;
+        screenshotCanvas.height = height;
         const ctx = screenshotCanvas.getContext('2d');
 
         // 1. 비디오 피드 그리기
-        ctx.drawImage(this.video, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
+        ctx.drawImage(this.video, 0, 0, width, height);
 
         // 2. AR 캔버스 (Three.js 렌더링) 오버레이
-        // 중요: 캔버스의 실제 렌더링 크기에 맞춰서 그려야 함
-        ctx.drawImage(this.canvas, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
+        ctx.drawImage(this.canvas, 0, 0, width, height);
+
+        // 3. 무조건 그려지는 초강력 디버그 표식 (좌측 상단)
+        ctx.fillStyle = '#FF00FF'; // 밝은 분홍
+        const debugSize = Math.min(width, height) * 0.15;
+        ctx.fillRect(0, 0, debugSize, debugSize);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 30px Arial';
+        ctx.fillText('CAPTURE', 10, 40);
+
+        // 4. 워터마크 로고 직접 그리기 (준비된 경우)
+        if (this.watermarkImage && this.watermarkImage.complete && this.watermarkImage.naturalWidth > 0) {
+            const logoSize = Math.min(width, height) * 0.25;
+            const margin = 50;
+            ctx.globalAlpha = 0.8;
+            ctx.drawImage(this.watermarkImage, width - logoSize - margin, height - logoSize - margin, logoSize, logoSize);
+            ctx.globalAlpha = 1.0;
+            console.log('[ARDisplay] 워터마크 직접 합성 완료');
+        }
 
         console.log('[ARDisplay] 스크린샷 캡처 완료');
         return screenshotCanvas;
