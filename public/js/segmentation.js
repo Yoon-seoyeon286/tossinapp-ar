@@ -12,7 +12,7 @@ class BackgroundRemover {
      * MediaPipe Selfie Segmentation 모델 초기화
      */
     async initialize(onProgress) {
-        this.onProgress = onProgress || (() => {});
+        this.onProgress = onProgress || (() => { });
 
         this.onProgress(10, 'MediaPipe 모델 초기화 중...');
 
