@@ -64,7 +64,8 @@ class ARDisplay {
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
             alpha: true,
-            antialias: true
+            antialias: true,
+            preserveDrawingBuffer: true
         });
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -189,7 +190,8 @@ class ARDisplay {
         ctx.drawImage(this.video, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
 
         // 2. AR 캔버스 (Three.js 렌더링) 오버레이
-        ctx.drawImage(this.canvas, 0, 0);
+        // 중요: 캔버스의 실제 렌더링 크기에 맞춰서 그려야 함
+        ctx.drawImage(this.canvas, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
 
         console.log('[ARDisplay] 스크린샷 캡처 완료');
         return screenshotCanvas;
