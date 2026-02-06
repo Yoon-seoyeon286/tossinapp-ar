@@ -1,0 +1,11 @@
+{
+  "name": "ar-vision-chroma",
+  "version": "1.0.0",
+  "description": "MediaPipe Selfie Segmentation background removal with AR display",
+  "scripts": {
+    "start": "npx serve public -l 3000",
+    "dev": "npx serve public -l 3000"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
