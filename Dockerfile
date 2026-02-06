@@ -9,8 +9,8 @@ RUN npm install
 # 소스(public) 복사
 COPY public/ ./public/
 
-# 포트 노출
+# 포트 노출 (Railway는 환경 변수 PORT를 사용하지만 관례상 EXPOSE 추가)
 EXPOSE 3000
 
-# 서버 실행 (npx serve 사용)
+# 서버 실행
 CMD ["npm", "start"]
