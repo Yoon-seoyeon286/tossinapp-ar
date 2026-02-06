@@ -6,6 +6,8 @@
     "start": "npx serve public -l 3000",
     "dev": "npx serve public -l 3000"
   },
-  "dependencies": {},
+  "dependencies": {
+    "serve": "^14.2.1"
+  },
   "devDependencies": {}
 }
