@@ -2,16 +2,18 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# 의존성 설치
-COPY package.json package-lock.json* ./
-RUN npm install
+# ar-engine 디렉토리의 의존성 설치
+COPY ar-engine/package.json ar-engine/package-lock.json* ./
+RUN npm install --include=dev
 
-# 소스 복사
-COPY public ./public
+# ar-engine 소스 복사
+COPY ar-engine/ .
 
-# 포트 설정
-ENV PORT=3000
+# webpack 빌드
+RUN npm run build
+
+# 포트 노출
 EXPOSE 3000
 
 # 서버 실행
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

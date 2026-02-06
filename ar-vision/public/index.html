@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR Chroma - 배경 제거 AR 툴</title>
+
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
+        crossorigin="anonymous"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- 시작 화면 -->
+    <div id="start-screen">
+        <h1>AR Chroma</h1>
+        <p>사진에서 인물만 추출하여<br>초록색 크로마키 배경으로 변환 후<br>AR로 띄워보세요!</p>
+
+        <div class="upload-area" id="upload-area">
+            <input type="file" id="file-input" accept="image/*" hidden>
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">사진을 선택하거나 드래그하세요</div>
+            <button id="upload-btn" class="btn primary">사진 선택</button>
+        </div>
+
+        <div id="preview-area" class="hidden">
+            <canvas id="preview-canvas"></canvas>
+            <div class="preview-controls">
+                <button id="process-btn" class="btn primary">배경 제거 시작</button>
+                <button id="reset-btn" class="btn secondary">다시 선택</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 처리 중 화면 -->
+    <div id="processing-screen" class="hidden">
+        <div class="loader"></div>
+        <p id="processing-status">MediaPipe 모델 로딩 중...</p>
+        <div class="progress-bar">
+            <div id="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="result-screen" class="hidden">
+        <div class="result-tabs">
+            <button class="tab-btn active" data-tab="original">원본</button>
+            <button class="tab-btn" data-tab="mask">마스크</button>
+            <button class="tab-btn" data-tab="chroma">크로마키</button>
+            <button class="tab-btn" data-tab="ar">AR 보기</button>
+        </div>
+
+        <div class="result-content">
+            <div id="tab-original" class="tab-panel active">
+                <canvas id="original-canvas"></canvas>
+            </div>
+            <div id="tab-mask" class="tab-panel">
+                <canvas id="mask-canvas"></canvas>
+            </div>
+            <div id="tab-chroma" class="tab-panel">
+                <canvas id="chroma-canvas"></canvas>
+            </div>
+            <div id="tab-ar" class="tab-panel">
+                <div id="ar-container">
+                    <video id="camera-video" playsinline autoplay muted></video>
+                    <canvas id="ar-canvas"></canvas>
+                    <button id="ar-capture-btn" class="ar-capture-btn">사진 촬영</button>
+                    <img src="el-logo.png" alt="logo" class="rt-watermark">
+                </div>
+                <div id="ar-controls" style="cursor: pointer;">
+                    <p>드래그: 이동 | 핀치: 크기 조절</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-actions">
+            <button id="download-chroma-btn" class="btn primary">크로마키 이미지 저장</button>
+            <button id="new-image-btn" class="btn secondary">새 이미지</button>
+        </div>
+    </div>
+
+    <script src="js/segmentation.js"></script>
+    <script src="js/ar-display.js"></script>
+    <script src="js/watermark.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
