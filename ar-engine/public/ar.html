@@ -946,19 +946,21 @@
                 // AR 오버레이 합성
                 ctx.drawImage(arCanvas, 0, 0);
 
-                // 3. 디버그 표식 (강렬한 핑크색 상단 배치)
-                ctx.fillStyle = '#FF00FF';
-                const dSize = Math.min(canvas.width, canvas.height) * 0.15;
-                ctx.fillRect(0, 0, dSize, dSize);
-
-                // 4. 워터마크 로고 직접 합성 (동기적 수행)
+                // 3. 워터마크 로고 직접 합성 (비율 유지)
                 if (logoImage && logoImage.complete && logoImage.naturalWidth > 0) {
-                    const lSize = Math.min(canvas.width, canvas.height) * 0.25;
-                    const lMargin = 50;
-                    ctx.globalAlpha = 0.85;
-                    ctx.drawImage(logoImage, canvas.width - lSize - lMargin, canvas.height - lSize - lMargin, lSize, lSize);
-                    ctx.globalAlpha = 1.0;
-                    console.log('[AR] 워터마크 직접 합성 완료');
+                    const logoAspect = logoImage.naturalWidth / logoImage.naturalHeight;
+                    const lWidth = Math.min(canvas.width, canvas.height) * 0.20;
+                    const lHeight = lWidth / logoAspect;
+
+                    const lMargin = 30;
+                    const lx = canvas.width - lWidth - lMargin;
+                    const ly = canvas.height - lHeight - lMargin;
+
+                    ctx.save();
+                    ctx.globalAlpha = 0.6; // 워터마크용 투명도
+                    ctx.drawImage(logoImage, lx, ly, lWidth, lHeight);
+                    ctx.restore();
+                    console.log('[AR] 워터마크 직접 합성 완료 (비율 유지)');
                 } else {
                     console.warn('[AR] 워터마크 이미지가 준비되지 않아 텍스트로 보완');
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';

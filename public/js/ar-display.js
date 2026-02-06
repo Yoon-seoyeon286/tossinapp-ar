@@ -200,22 +200,24 @@ class ARDisplay {
         // 2. AR 캔버스 (Three.js 렌더링) 오버레이
         ctx.drawImage(this.canvas, 0, 0, width, height);
 
-        // 3. 무조건 그려지는 초강력 디버그 표식 (좌측 상단)
-        ctx.fillStyle = '#FF00FF'; // 밝은 분홍
-        const debugSize = Math.min(width, height) * 0.15;
-        ctx.fillRect(0, 0, debugSize, debugSize);
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 30px Arial';
-        ctx.fillText('CAPTURE', 10, 40);
-
-        // 4. 워터마크 로고 직접 그리기 (준비된 경우)
+        // 3. 워터마크 로고 직접 그리기 (준비된 경우)
         if (this.watermarkImage && this.watermarkImage.complete && this.watermarkImage.naturalWidth > 0) {
-            const logoSize = Math.min(width, height) * 0.25;
-            const margin = 50;
-            ctx.globalAlpha = 0.8;
-            ctx.drawImage(this.watermarkImage, width - logoSize - margin, height - logoSize - margin, logoSize, logoSize);
-            ctx.globalAlpha = 1.0;
-            console.log('[ARDisplay] 워터마크 직접 합성 완료');
+            // 원본 비율 계산
+            const logoAspect = this.watermarkImage.naturalWidth / this.watermarkImage.naturalHeight;
+            const logoWidth = Math.min(width, height) * 0.20; // 가로 크기 결정
+            const logoHeight = logoWidth / logoAspect;      // 비율에 따른 세로 크기 결정
+
+            const margin = 30;
+            // 우측 하단 배치
+            const x = width - logoWidth - margin;
+            const y = height - logoHeight - margin;
+
+            ctx.save();
+            ctx.globalAlpha = 0.6; // 워터마크 느낌의 투명도
+            ctx.drawImage(this.watermarkImage, x, y, logoWidth, logoHeight);
+            ctx.restore();
+
+            console.log('[ARDisplay] 워터마크 합성 완료 (비율 유지)');
         }
 
         console.log('[ARDisplay] 스크린샷 캡처 완료');
