@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Chroma - 배경 제거 AR 툴</title>
+    <title>가상내짤</title>
 
     <!-- MediaPipe -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
@@ -19,21 +18,28 @@
 <body>
     <!-- 시작 화면 -->
     <div id="start-screen">
-        <h1>AR Chroma</h1>
-        <p>사진에서 인물만 추출하여<br>초록색 크로마키 배경으로 변환 후<br>AR로 띄워보세요!</p>
+        <div class="logo-container">
+            <img src="el-logo.png" alt="가상내짤" class="main-logo">
+        </div>
+        <p class="subtitle">이미지에서 배경을 자동으로 제거하고<br>AR로 표시합니다!</p>
 
         <div class="upload-area" id="upload-area">
             <input type="file" id="file-input" accept="image/*" hidden>
-            <div class="upload-icon">📷</div>
-            <div class="upload-text">사진을 선택하거나 드래그하세요</div>
-            <button id="upload-btn" class="btn primary">사진 선택</button>
+            <div class="upload-icon">📤</div>
+            <div class="upload-text">이미지를 여기에 드롭하거나<br>탭하여 선택하세요</div>
+            <div class="file-info">JPG, PNG, WebP 지원 (최대 10MB)</div>
+        </div>
+
+        <div class="button-group">
+            <button id="gallery-btn" class="btn btn-primary">📂 갤러리</button>
+            <button id="camera-btn" class="btn btn-secondary">📷 카메라</button>
         </div>
 
         <div id="preview-area" class="hidden">
             <canvas id="preview-canvas"></canvas>
             <div class="preview-controls">
-                <button id="process-btn" class="btn primary">배경 제거 시작</button>
-                <button id="reset-btn" class="btn secondary">다시 선택</button>
+                <button id="process-btn" class="btn btn-primary">배경 제거 시작</button>
+                <button id="reset-btn" class="btn btn-secondary">다시 선택</button>
             </div>
         </div>
     </div>
@@ -70,8 +76,7 @@
                 <div id="ar-container">
                     <video id="camera-video" playsinline autoplay muted></video>
                     <canvas id="ar-canvas"></canvas>
-                    <button id="ar-capture-btn" class="ar-capture-btn">사진 촬영</button>
-                    <img src="el-logo.png" alt="logo" class="rt-watermark">
+                    <button id="ar-capture-btn" class="ar-capture-btn">📷 촬영</button>
                 </div>
                 <div id="ar-controls" style="cursor: pointer;">
                     <p>드래그: 이동 | 핀치: 크기 조절</p>
@@ -80,8 +85,8 @@
         </div>
 
         <div class="result-actions">
-            <button id="download-chroma-btn" class="btn primary">크로마키 이미지 저장</button>
-            <button id="new-image-btn" class="btn secondary">새 이미지</button>
+            <button id="download-chroma-btn" class="btn btn-primary">크로마키 이미지 저장</button>
+            <button id="new-image-btn" class="btn btn-secondary">새 이미지</button>
         </div>
     </div>
 
@@ -90,5 +95,4 @@
     <script src="js/watermark.js"></script>
     <script src="js/app.js"></script>
 </body>
-
 </html>

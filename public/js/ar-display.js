@@ -31,25 +31,6 @@ class ARDisplay {
         this.maxScale = 2.0;
 
         this._boundAnimate = this._animate.bind(this);
-
-        // 워터마크 이미지
-        this.watermarkImage = null;
-        this._loadWatermark();
-    }
-
-    /**
-     * 워터마크 이미지 로드
-     */
-    _loadWatermark() {
-        this.watermarkImage = new Image();
-        this.watermarkImage.src = 'logo.png';
-        this.watermarkImage.onerror = () => {
-            console.log('[ARDisplay] logo.png 로드 실패, el-logo.png 시도');
-            this.watermarkImage.src = 'el-logo.png';
-        };
-        this.watermarkImage.onload = () => {
-            console.log('[ARDisplay] 워터마크 이미지 준비 완료');
-        };
     }
 
     /**
@@ -68,8 +49,7 @@ class ARDisplay {
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
             alpha: true,
-            antialias: true,
-            preserveDrawingBuffer: true
+            antialias: true
         });
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -186,39 +166,15 @@ class ARDisplay {
      */
     captureScreenshot() {
         const screenshotCanvas = document.createElement('canvas');
-        // 해상도를 위해 실제 비디오 크기 또는 컨테이너 크기 사용
-        const width = this.video.videoWidth || this.container.clientWidth;
-        const height = this.video.videoHeight || this.container.clientHeight;
-
-        screenshotCanvas.width = width;
-        screenshotCanvas.height = height;
+        screenshotCanvas.width = this.container.clientWidth;
+        screenshotCanvas.height = this.container.clientHeight;
         const ctx = screenshotCanvas.getContext('2d');
 
         // 1. 비디오 피드 그리기
-        ctx.drawImage(this.video, 0, 0, width, height);
+        ctx.drawImage(this.video, 0, 0, screenshotCanvas.width, screenshotCanvas.height);
 
         // 2. AR 캔버스 (Three.js 렌더링) 오버레이
-        ctx.drawImage(this.canvas, 0, 0, width, height);
-
-        // 3. 워터마크 로고 직접 그리기 (준비된 경우)
-        if (this.watermarkImage && this.watermarkImage.complete && this.watermarkImage.naturalWidth > 0) {
-            // 원본 비율 계산
-            const logoAspect = this.watermarkImage.naturalWidth / this.watermarkImage.naturalHeight;
-            const logoWidth = Math.min(width, height) * 0.20; // 가로 크기 결정
-            const logoHeight = logoWidth / logoAspect;      // 비율에 따른 세로 크기 결정
-
-            const margin = 30;
-            // 우측 하단 배치
-            const x = width - logoWidth - margin;
-            const y = height - logoHeight - margin;
-
-            ctx.save();
-            ctx.globalAlpha = 0.6; // 워터마크 느낌의 투명도
-            ctx.drawImage(this.watermarkImage, x, y, logoWidth, logoHeight);
-            ctx.restore();
-
-            console.log('[ARDisplay] 워터마크 합성 완료 (비율 유지)');
-        }
+        ctx.drawImage(this.canvas, 0, 0);
 
         console.log('[ARDisplay] 스크린샷 캡처 완료');
         return screenshotCanvas;

@@ -9,9 +9,6 @@
     let backgroundRemover = null;
     let arDisplay = null;
 
-    // 워터마크 이미지 (미리 로드)
-    let watermarkImage = null;
-
     // 처리 결과 저장
     let results = {
         original: null,
@@ -61,13 +58,6 @@
     // ========== 초기화 ==========
     function init() {
         console.log('[App] 초기화 시작');
-
-        // 워터마크 이미지 미리 로드
-        watermarkImage = new Image();
-        const logoPath = 'logo.png';
-        watermarkImage.src = logoPath;
-        watermarkImage.onload = () => console.log('[App] 워터마크 이미지 프리로드 완료:', logoPath);
-        watermarkImage.onerror = () => console.error('[App] 워터마크 이미지 프리로드 실패:', logoPath);
 
         // 파일 입력 이벤트
         $uploadBtn.addEventListener('click', () => $fileInput.click());
@@ -353,44 +343,67 @@
     function downloadCapturedScreenshot() {
         if (!capturedScreenshot) return;
 
-        console.log('[App] 스크린샷 저장 시작');
+        const logo = new Image();
+        logo.onload = () => {
+            const ctx = capturedScreenshot.getContext('2d');
+            const logoSize = Math.min(capturedScreenshot.width, capturedScreenshot.height) * 0.15;
+            const margin = 20;
+            const logoX = capturedScreenshot.width - logoSize - margin;
+            const logoY = capturedScreenshot.height - logoSize - margin;
 
-        capturedScreenshot.toBlob((blob) => {
-            if (!blob) {
-                alert('이미지 생성에 실패했습니다.');
-                return;
-            }
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'ar-capture-' + Date.now() + '.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            console.log('[App] 저장 완료');
-        }, 'image/png');
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            ctx.globalAlpha = 1.0;
+
+            capturedScreenshot.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ar-screenshot-' + Date.now() + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        };
+
+        logo.onerror = () => {
+            capturedScreenshot.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ar-screenshot-' + Date.now() + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        };
+
+        logo.src = './el-logo.png';
     }
 
-    async function downloadChromaImage() {
+    function downloadChromaImage() {
         if (!results.chroma) return;
 
-        console.log('[App] 크로마키 이미지 저장 시작');
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = results.chroma.width;
+        tempCanvas.height = results.chroma.height;
+        const ctx = tempCanvas.getContext('2d');
+        ctx.drawImage(results.chroma, 0, 0);
 
-        try {
-            const logoSrc = './logo.png';
-            const watermarkObj = window.Watermark;
+        const logo = new Image();
+        logo.onload = () => {
+            const logoSize = Math.min(tempCanvas.width, tempCanvas.height) * 0.15;
+            const margin = 20;
+            const logoX = tempCanvas.width - logoSize - margin;
+            const logoY = tempCanvas.height - logoSize - margin;
 
-            if (watermarkObj && watermarkObj.apply) {
-                await watermarkObj.apply(results.chroma, logoSrc, {
-                    opacity: 0.85,
-                    sizeRatio: 0.22,
-                    margin: 40
-                });
-            }
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+            ctx.globalAlpha = 1.0;
 
-            results.chroma.toBlob((blob) => {
-                if (!blob) return;
+            tempCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -399,20 +412,23 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                console.log('[App] 저장 완료');
             }, 'image/png');
+        };
 
-        } catch (error) {
-            console.error('[App] 크로마키 워터마크 적용 실패:', error);
-            results.chroma.toBlob((blob) => {
+        logo.onerror = () => {
+            tempCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'chroma-error.png';
+                a.download = 'chroma-' + Date.now() + '.png';
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }, 'image/png');
-        }
+        };
+
+        logo.src = './el-logo.png';
     }
 
     // ========== 리셋 ==========
