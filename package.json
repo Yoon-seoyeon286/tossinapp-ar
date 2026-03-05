@@ -1,15 +1,23 @@
 {
   "name": "ar-vision-chroma",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "MediaPipe Selfie Segmentation background removal with AR display",
   "main": "index.js",
   "scripts": {
     "start": "npx serve public -l $PORT",
-    "dev": "npx serve public -l 3000"
+    "dev": "granite dev",
+    "build": "granite build",
+    "deploy": "ait deploy"
   },
   "dependencies": {
+    "@apps-in-toss/web-framework": "^1.9.4",
+    "@emotion/react": "^11.14.0",
+    "@toss/tds-mobile": "^2.2.1",
+    "@toss/tds-mobile-ait": "^2.2.1",
+    "express": "^5.2.1",
     "serve": "^14.2.1"
   },
+  "devDependencies": {},
   "engines": {
     "node": ">=18"
   }

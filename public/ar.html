@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR View - 가상내짤</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* 카메라 배경 */
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+
+        #video-background.mirror {
+            transform: scaleX(-1);
+        }
+
+        /* Three.js 캔버스 컨테이너 */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 터치 영역 */
+        #touch-area {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        /* 상단 UI */
+        .top-ui {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .top-ui>* {
+            pointer-events: auto;
+        }
+
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(26, 46, 26, 0.8);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            background: rgba(36, 53, 36, 0.9);
+            transform: scale(1.05);
+        }
+
+        .btn-icon:active {
+            transform: scale(0.95);
+        }
+
+        .btn-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: #7CB342;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* 하단 버튼 그룹 */
+        .bottom-ui {
+            position: fixed;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            z-index: 100;
+        }
+
+        /* 캡처 버튼 - 큰 원형 */
+        .btn-capture {
+            width: 70px;
+            height: 70px;
+            background: #7CB342;
+            border: 4px solid rgba(26, 46, 26, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-capture:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(124, 179, 66, 0.5);
+        }
+
+        .btn-capture:active {
+            transform: scale(0.95);
+        }
+
+        .btn-capture .inner-circle {
+            width: 56px;
+            height: 56px;
+            background: #8BC34A;
+            border-radius: 50%;
+            border: 2px solid rgba(26, 46, 26, 0.3);
+        }
+
+        /* 사이드 버튼들 */
+        .btn-side {
+            width: 50px;
+            height: 50px;
+            background: rgba(26, 46, 26, 0.8);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .btn-side:hover {
+            background: rgba(36, 53, 36, 0.9);
+            transform: scale(1.05);
+        }
+
+        .btn-side:active {
+            transform: scale(0.95);
+        }
+
+        .btn-side svg {
+            width: 24px;
+            height: 24px;
+            stroke: #7CB342;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* 로딩 화면 */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a2e1a 0%, #0f1f0f 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #loading-screen.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(124, 179, 66, 0.2);
+            border-top-color: #7CB342;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: #C8E6C9;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        /* 화면을 눌러 AR 시작 (iOS 사용자 제스처) */
+        .tap-to-start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a2e1a 0%, #0f1f0f 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            cursor: pointer;
+        }
+
+        .tap-to-start-overlay.hidden {
+            display: none;
+        }
+
+        .tap-to-start-text {
+            color: #7CB342;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 20px 40px;
+        }
+
+        /* 에러 화면 */
+        .error-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a2e1a 0%, #0f1f0f 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .error-screen.visible {
+            display: flex;
+        }
+
+        .error-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 100, 100, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .error-icon svg {
+            width: 30px;
+            height: 30px;
+            stroke: #ff6464;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .error-message {
+            color: #C8E6C9;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-error {
+            padding: 16px 32px;
+            background: #7CB342;
+            border: none;
+            border-radius: 30px;
+            color: #0f1f0f;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-error:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(124, 179, 66, 0.4);
+        }
+
+        .btn-error svg {
+            width: 20px;
+            height: 20px;
+            stroke: #0f1f0f;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* 안내 오버레이 - 세련된 디자인 */
+        .hint-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 46, 26, 0.95);
+            padding: 24px 36px;
+            border-radius: 16px;
+            color: #C8E6C9;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 15px;
+            text-align: center;
+            z-index: 200;
+            pointer-events: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            line-height: 1.6;
+        }
+
+        .hint-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .hint-overlay .hint-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #7CB342;
+        }
+
+        .hint-overlay .hint-text {
+            opacity: 0.9;
+            text-align: center;
+        }
+
+        /* 캡처 플래시 효과 */
+        .capture-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #7CB342;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 500;
+            transition: opacity 0.1s ease;
+        }
+
+        .capture-flash.flash {
+            opacity: 1;
+        }
+
+        /* 저장 완료 토스트 */
+        .toast {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(26, 46, 26, 0.95);
+            color: #7CB342;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 300;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 실시간 워터마크 */
+        .rt-watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 50;
+            object-fit: contain;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 실시간 워터마크 안내용 -->
+    <img src="logo.png" alt="watermark" class="rt-watermark" onerror="this.src='el-logo.png'">
+
+    <!-- iOS 등: 사용자 탭 후 AR 시작 (제스처 필요) -->
+    <div id="tap-to-start" class="tap-to-start-overlay">
+        <p class="tap-to-start-text">화면을 눌러 AR 시작</p>
+    </div>
+
+    <!-- 로딩 화면 -->
+    <div id="loading-screen" class="hidden">
+        <div class="loading-spinner"></div>
+        <p class="loading-text" id="loading-text">카메라 연결 중...</p>
+    </div>
+
+    <!-- 에러 화면 -->
+    <div class="error-screen" id="error-screen">
+        <div class="error-icon">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+        </div>
+        <p class="error-message" id="error-message">오류가 발생했습니다</p>
+        <button class="btn-error" onclick="location.href='index.html'">
+            <svg viewBox="0 0 24 24">
+                <polyline points="15 18 9 12 15 6" />
+            </svg>
+            이미지 다시 선택
+        </button>
+    </div>
+
+    <!-- 캡처 플래시 -->
+    <div class="capture-flash" id="capture-flash"></div>
+
+    <!-- 카메라 비디오 -->
+    <video id="video-background" autoplay muted playsinline></video>
+
+    <!-- Three.js 캔버스 -->
+    <div id="canvas-container"></div>
+
+    <!-- 터치 영역 -->
+    <div id="touch-area"></div>
+
+    <!-- 상단 UI -->
+    <div class="top-ui">
+        <button class="btn-icon" id="btn-back" title="뒤로가기">
+            <svg viewBox="0 0 24 24">
+                <polyline points="15 18 9 12 15 6" />
+            </svg>
+        </button>
+        <button class="btn-icon" id="btn-switch-camera" title="카메라 전환">
+            <svg viewBox="0 0 24 24">
+                <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
+                <path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5" />
+                <polyline points="16 2 19 5 16 8" />
+                <polyline points="8 22 5 19 8 16" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- 안내 오버레이 -->
+    <div class="hint-overlay" id="hint-overlay">
+        <div class="hint-title">이동 및 확대 가능합니다</div>
+        <div class="hint-text">
+            드래그하여 위치 이동<br>
+            핀치하여 크기 조절
+        </div>
+    </div>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast">저장되었습니다</div>
+
+    <!-- 하단 버튼 -->
+    <div class="bottom-ui">
+        <button class="btn-side" id="btn-new-image" title="새 이미지">
+            <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+            </svg>
+        </button>
+        <button class="btn-capture" id="btn-capture" title="캡처">
+            <div class="inner-circle"></div>
+        </button>
+        <button class="btn-side" id="btn-download" title="다운로드">
+            <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+        </button>
+    </div>
+
+    <script src="bridge.js"></script>
+    <script src="ar.js"></script>
+</body>
+</html>
